@@ -220,6 +220,56 @@ const TEMPLATES = {
       qwen: 'Respond first, then wait for others to build on your ideas',
       phi: 'Build on what Qwen said, adding your own perspective'
     }
+  },
+  test_turnbased: {
+    name: '🧪 Test - Turn-Based',
+    icon: '🎲',
+    description: 'Only one model responds per message, rotating turns',
+    initialPrompt: 'Let\'s take turns responding - what are your thoughts?',
+    suggestedModels: ['qwen', 'phi', 'deepseek'],
+    mode: 'turnbased',
+    personas: {
+      qwen: 'When it\'s your turn, provide your perspective clearly and concisely',
+      phi: 'When it\'s your turn, build on the conversation and add new insights',
+      deepseek: 'When it\'s your turn, analyze what\'s been said and offer deeper thoughts'
+    }
+  },
+  test_facilitator: {
+    name: '🧪 Test - Facilitator',
+    icon: '🎤',
+    description: 'One model leads discussion, others respond when called on',
+    initialPrompt: 'Let\'s have a facilitated discussion',
+    suggestedModels: ['claude', 'qwen', 'phi'],
+    mode: 'facilitator',
+    personas: {
+      claude: 'You are the FACILITATOR. Ask thoughtful questions to Qwen and Phi-3. Guide the discussion by calling on them by name. Do not answer your own questions.',
+      qwen: 'You are a PARTICIPANT. Only respond when the facilitator (Claude) asks you a direct question or calls on you by name.',
+      phi: 'You are a PARTICIPANT. Only respond when the facilitator (Claude) asks you a direct question or calls on you by name.'
+    }
+  },
+  test_debate_rounds: {
+    name: '🧪 Test - Debate Rounds',
+    icon: '⚔️',
+    description: 'Structured debate with opening, rebuttal, and closing',
+    initialPrompt: 'Debate topic: [YOUR TOPIC] - Opening statements first!',
+    suggestedModels: ['qwen', 'phi'],
+    mode: 'debate_rounds',
+    personas: {
+      qwen: 'You are arguing FOR the topic. First give opening statement, then rebuttals, then closing.',
+      phi: 'You are arguing AGAINST the topic. First give opening statement, then rebuttals, then closing.'
+    }
+  },
+  test_socratic: {
+    name: '🧪 Test - Socratic Method',
+    icon: '🤔',
+    description: 'One model asks probing questions, others explore answers',
+    initialPrompt: 'Let\'s explore this topic deeply through questions',
+    suggestedModels: ['phi', 'qwen'],
+    mode: 'socratic',
+    personas: {
+      phi: 'You are the QUESTIONER. Ask one deep, probing question at a time to help explore the topic. Be like Socrates - guide through questions, not answers.',
+      qwen: 'You are the THINKER. Answer the questions thoughtfully and honestly. Explore your reasoning and admit what you don\'t know.'
+    }
   }
 };
 
@@ -433,8 +483,128 @@ app.post('/api/conversations/:id/messages', async (req, res) => {
 
   res.json({ message: userMessage });
 
-  // Get responses from models (sequential or parallel based on mode)
-  if (conversation.mode === 'sequential') {
+  // Handle turn-based mode (initialize turn counter if needed)
+  if (conversation.mode === 'turnbased' && !conversation.turnIndex) {
+    conversation.turnIndex = 0;
+  }
+
+  // Get responses from models (different strategies based on mode)
+  if (conversation.mode === 'turnbased') {
+    // Turn-based: only one model responds, rotating through models
+    const modelKey = respondingModels[conversation.turnIndex % respondingModels.length];
+    conversation.turnIndex++;
+
+    broadcast({
+      type: 'thinking',
+      conversationId: conversation.id,
+      model: modelKey
+    });
+
+    const persona = conversation.personas[modelKey];
+    const temperature = conversation.temperature || 0.7;
+
+    const updatedApiMessages = conversation.messages.map(msg => {
+      if (msg.role === 'assistant' && msg.name) {
+        return {
+          role: msg.role,
+          content: `[${msg.name}]: ${msg.content}`
+        };
+      }
+      return {
+        role: msg.role,
+        content: msg.content
+      };
+    });
+
+    const result = await callModel(modelKey, updatedApiMessages, persona, temperature);
+
+    if (result) {
+      const model = MODELS[modelKey];
+      const assistantMessage = {
+        id: uuidv4(),
+        role: 'assistant',
+        content: result.content,
+        name: model.name,
+        modelKey,
+        timestamp: new Date(),
+        usage: result.usage,
+        reactions: {},
+        votes: 0
+      };
+
+      conversation.messages.push(assistantMessage);
+
+      if (result.usage) {
+        conversation.totalTokens += (result.usage.total_tokens || 0);
+        conversation.totalCost += (result.usage.total_tokens || 0) * 0.000015;
+      }
+
+      broadcast({
+        type: 'message',
+        conversationId: conversation.id,
+        message: assistantMessage
+      });
+    }
+  } else if (conversation.mode === 'facilitator' || conversation.mode === 'socratic' || conversation.mode === 'debate_rounds') {
+    // Facilitator/Socratic/Debate: Sequential with specific roles
+    // These modes work like sequential but rely on personas to define behavior
+    for (const modelKey of respondingModels) {
+      broadcast({
+        type: 'thinking',
+        conversationId: conversation.id,
+        model: modelKey
+      });
+
+      const persona = conversation.personas[modelKey];
+      const temperature = conversation.temperature || 0.7;
+
+      const updatedApiMessages = conversation.messages.map(msg => {
+        if (msg.role === 'assistant' && msg.name) {
+          return {
+            role: msg.role,
+            content: `[${msg.name}]: ${msg.content}`
+          };
+        }
+        return {
+          role: msg.role,
+          content: msg.content
+        };
+      });
+
+      const result = await callModel(modelKey, updatedApiMessages, persona, temperature);
+
+      if (result) {
+        const model = MODELS[modelKey];
+        const assistantMessage = {
+          id: uuidv4(),
+          role: 'assistant',
+          content: result.content,
+          name: model.name,
+          modelKey,
+          timestamp: new Date(),
+          usage: result.usage,
+          reactions: {},
+          votes: 0
+        };
+
+        conversation.messages.push(assistantMessage);
+
+        if (result.usage) {
+          conversation.totalTokens += (result.usage.total_tokens || 0);
+          conversation.totalCost += (result.usage.total_tokens || 0) * 0.000015;
+        }
+
+        broadcast({
+          type: 'message',
+          conversationId: conversation.id,
+          message: assistantMessage
+        });
+
+        // Add delay for natural flow
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+    }
+  } else if (conversation.mode === 'sequential') {
     // Sequential mode: models respond one after another
     for (const modelKey of respondingModels) {
       broadcast({

@@ -208,6 +208,18 @@ const TEMPLATES = {
       gpt5: 'Identify potential issues, suggest improvements, evaluate project health'
     },
     requiresGitHub: true
+  },
+  test_sequential: {
+    name: '🧪 Test - Sequential',
+    icon: '🧪',
+    description: 'Models respond one after another (experimental)',
+    initialPrompt: 'Let\'s test sequential responses - what do you think about AI?',
+    suggestedModels: ['qwen', 'phi'],
+    mode: 'sequential',
+    personas: {
+      qwen: 'Respond first, then wait for others to build on your ideas',
+      phi: 'Build on what Qwen said, adding your own perspective'
+    }
   }
 };
 
@@ -421,20 +433,35 @@ app.post('/api/conversations/:id/messages', async (req, res) => {
 
   res.json({ message: userMessage });
 
-  // Get responses from models (all active or only mentioned)
-  const modelResponses = await Promise.all(
-    respondingModels.map(async (modelKey) => {
+  // Get responses from models (sequential or parallel based on mode)
+  if (conversation.mode === 'sequential') {
+    // Sequential mode: models respond one after another
+    for (const modelKey of respondingModels) {
       broadcast({
         type: 'thinking',
         conversationId: conversation.id,
         model: modelKey
       });
-      
+
       const persona = conversation.personas[modelKey];
-      const temperature = conversation.temperature || (conversation.mode === 'debate' ? 0.8 : 0.7);
-      
-      const result = await callModel(modelKey, apiMessages, persona, temperature);
-      
+      const temperature = conversation.temperature || 0.7;
+
+      // Update apiMessages to include previous sequential responses
+      const updatedApiMessages = conversation.messages.map(msg => {
+        if (msg.role === 'assistant' && msg.name) {
+          return {
+            role: msg.role,
+            content: `[${msg.name}]: ${msg.content}`
+          };
+        }
+        return {
+          role: msg.role,
+          content: msg.content
+        };
+      });
+
+      const result = await callModel(modelKey, updatedApiMessages, persona, temperature);
+
       if (result) {
         const model = MODELS[modelKey];
         const assistantMessage = {
@@ -448,30 +475,79 @@ app.post('/api/conversations/:id/messages', async (req, res) => {
           reactions: {},
           votes: 0
         };
-        
+
         conversation.messages.push(assistantMessage);
-        
+
         // Update token usage
         if (result.usage) {
           conversation.totalTokens += (result.usage.total_tokens || 0);
-          // Rough cost estimate (varies by model)
           conversation.totalCost += (result.usage.total_tokens || 0) * 0.000015;
         }
-        
+
         // Broadcast model response
         broadcast({
           type: 'message',
           conversationId: conversation.id,
           message: assistantMessage
         });
-        
-        return assistantMessage;
+
+        // Add delay before next model (makes it feel more natural)
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
-      
-      return null;
-    })
-  );
-  
+    }
+  } else {
+    // Parallel mode: all models respond at once (default)
+    const modelResponses = await Promise.all(
+      respondingModels.map(async (modelKey) => {
+        broadcast({
+          type: 'thinking',
+          conversationId: conversation.id,
+          model: modelKey
+        });
+
+        const persona = conversation.personas[modelKey];
+        const temperature = conversation.temperature || (conversation.mode === 'debate' ? 0.8 : 0.7);
+
+        const result = await callModel(modelKey, apiMessages, persona, temperature);
+
+        if (result) {
+          const model = MODELS[modelKey];
+          const assistantMessage = {
+            id: uuidv4(),
+            role: 'assistant',
+            content: result.content,
+            name: model.name,
+            modelKey,
+            timestamp: new Date(),
+            usage: result.usage,
+            reactions: {},
+            votes: 0
+          };
+
+          conversation.messages.push(assistantMessage);
+
+          // Update token usage
+          if (result.usage) {
+            conversation.totalTokens += (result.usage.total_tokens || 0);
+            // Rough cost estimate (varies by model)
+            conversation.totalCost += (result.usage.total_tokens || 0) * 0.000015;
+          }
+
+          // Broadcast model response
+          broadcast({
+            type: 'message',
+            conversationId: conversation.id,
+            message: assistantMessage
+          });
+
+          return assistantMessage;
+        }
+
+        return null;
+      })
+    );
+  }
+
   broadcast({
     type: 'complete',
     conversationId: conversation.id

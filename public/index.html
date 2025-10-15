@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Brainstorm - Multi-Model Chat</title>
+    <link rel="stylesheet" href="styles-fixed.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🧠 AI Brainstorm</h1>
+                <button id="newChatBtn" class="btn-primary">+ New Chat</button>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Templates -->
+                <div class="templates-panel">
+                    <h3>Templates</h3>
+                    <select id="templateSelect" class="template-select">
+                        <option value="">Custom conversation</option>
+                    </select>
+                </div>
+                
+                <!-- Settings Panel -->
+                <div class="settings-panel">
+                    <h3>Active Models</h3>
+                    <div class="model-toggles" id="modelToggles">
+                        <!-- Populated dynamically from server -->
+                    </div>
+                    
+                    <h3>Mode</h3>
+                    <select id="modeSelect" class="mode-select">
+                        <option value="collaborate">🤝 Collaborate</option>
+                        <option value="debate">⚔️ Debate</option>
+                        <option value="personas">🎭 Personas</option>
+                    </select>
+                    
+                    <h3>Creativity</h3>
+                    <div class="temperature-control">
+                        <input type="range" id="temperatureSlider" min="0" max="1" step="0.1" value="0.7">
+                        <div class="temperature-labels">
+                            <span>Focused</span>
+                            <span id="temperatureValue">0.7</span>
+                            <span>Creative</span>
+                        </div>
+                    </div>
+                    
+                    <div id="personasPanel" class="personas-panel hidden">
+                        <h4>Assign Roles</h4>
+                        <div id="personaInputs"></div>
+                    </div>
+                </div>
+                
+                <!-- Search Panel -->
+                <div class="search-panel">
+                    <h3>Search</h3>
+                    <input type="text" id="searchInput" placeholder="Search messages..." class="search-input">
+                    <div id="searchResults" class="search-results hidden"></div>
+                </div>
+                
+                <!-- Stats -->
+                <div class="stats-panel">
+                    <div class="stat">
+                        <span class="stat-label">Messages</span>
+                        <span id="messageCount" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Tokens</span>
+                        <span id="tokenCount" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Cost</span>
+                        <span id="costCount" class="stat-value">$0.00</span>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="actions-panel">
+                    <button id="interactBtn" class="btn-secondary">🤝 Make them interact</button>
+                    <button id="synthesizeBtn" class="btn-secondary">📝 Synthesize discussion</button>
+                    <button id="exportBtn" class="btn-secondary">💾 Export to Markdown</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Chat Area -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <span id="chatTitle">Start a new conversation</span>
+                </div>
+                <div class="thinking-indicators" id="thinkingIndicators"></div>
+            </div>
+            
+            <div class="messages-container" id="messagesContainer">
+                <div class="welcome-message">
+                    <h2>👋 Welcome to AI Brainstorm</h2>
+                    <p>Have collaborative discussions with multiple AI models at once.</p>
+                    <p>Models can see each other's responses and naturally build on ideas, disagree constructively, and ask each other questions.</p>
+                    <div class="welcome-tips">
+                        <h3>Try these modes:</h3>
+                        <ul>
+                            <li><strong>🤝 Collaborate:</strong> Models work together to explore ideas</li>
+                            <li><strong>⚔️ Debate:</strong> Models take different perspectives and constructively challenge each other</li>
+                            <li><strong>🎭 Personas:</strong> Assign specific roles (e.g., "optimist", "devil's advocate", "technical expert")</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="What would you like to brainstorm about?"
+                        rows="1"
+                    ></textarea>
+                    <button id="sendBtn" class="btn-send">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Synthesis Modal -->
+    <div id="synthesisModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📝 Discussion Synthesis</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="synthesisContent">
+                <div class="loading">Synthesizing conversation...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcutsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                <button class="modal-close-shortcuts">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-list">
+                    <div class="shortcut-item">
+                        <kbd>Cmd/Ctrl</kbd> + <kbd>Enter</kbd>
+                        <span>Send message</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Cmd/Ctrl</kbd> + <kbd>K</kbd>
+                        <span>Focus search</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Cmd/Ctrl</kbd> + <kbd>N</kbd>
+                        <span>New conversation</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Cmd/Ctrl</kbd> + <kbd>I</kbd>
+                        <span>Make models interact</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Cmd/Ctrl</kbd> + <kbd>S</kbd>
+                        <span>Synthesize discussion</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Cmd/Ctrl</kbd> + <kbd>/</kbd>
+                        <span>Show shortcuts</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Esc</kbd>
+                        <span>Close modal/clear search</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

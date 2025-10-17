@@ -36,6 +36,15 @@ const costCount = document.getElementById('costCount');
 const menuToggle = document.getElementById('menuToggle');
 const sidebar = document.getElementById('sidebar');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
+const stopBtn = document.getElementById('stopBtn');
+const themeToggle = document.getElementById('themeToggle');
+
+// Track if generation is in progress
+let isGenerating = false;
+
+// Theme preference
+const THEME_KEY = 'ai_brainstorm_theme';
+let currentTheme = localStorage.getItem(THEME_KEY) || 'dark';
 
 // localStorage Functions
 function loadConversationsFromStorage() {
@@ -182,8 +191,25 @@ function renderConversation(conversation) {
 // Note: window.loadConversation is set up in setupEventListeners to include mobile menu closing
 window.deleteConversation = deleteConversationFromStorage;
 
+// Theme functions
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    themeToggle.textContent = theme === 'dark' ? '🌙' : '☀️';
+    themeToggle.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+    currentTheme = theme;
+    localStorage.setItem(THEME_KEY, theme);
+}
+
+function toggleTheme() {
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+}
+
 // Initialize
 async function init() {
+    // Apply saved theme
+    applyTheme(currentTheme);
+
     // Load conversations from storage
     loadConversationsFromStorage();
 
@@ -295,6 +321,8 @@ function handleWebSocketMessage(data) {
         case 'stream':
             // Handle streaming chunks - update message in real-time
             updateStreamingMessage(data);
+            isGenerating = true;
+            stopBtn.classList.remove('hidden');
             break;
         case 'message':
             addMessageToUI(data.message);
@@ -304,9 +332,13 @@ function handleWebSocketMessage(data) {
             break;
         case 'thinking':
             addThinkingIndicator(data.model);
+            isGenerating = true;
+            stopBtn.classList.remove('hidden');
             break;
         case 'complete':
             clearThinkingIndicators();
+            isGenerating = false;
+            stopBtn.classList.add('hidden');
             break;
         case 'reaction':
             updateMessageReactions(data.messageId, data.reactions);
@@ -325,6 +357,19 @@ function setupEventListeners() {
             sendMessage();
         }
     });
+
+    // Stop generation button
+    stopBtn.addEventListener('click', () => {
+        isGenerating = false;
+        stopBtn.classList.add('hidden');
+        clearThinkingIndicators();
+        sendBtn.disabled = false;
+        messageInput.disabled = false;
+        messageInput.focus();
+    });
+
+    // Theme toggle button
+    themeToggle.addEventListener('click', toggleTheme);
 
     // Mobile menu toggle
     if (menuToggle) {
@@ -979,6 +1024,16 @@ function addMessageToUI(message) {
                 <span class="message-time">${time}</span>
             </div>
             <div class="message-text">${content}</div>
+            <div class="message-actions">
+                <button class="action-btn copy-btn" onclick="copyMessage('${message.id}')" title="Copy message">
+                    📋 Copy
+                </button>
+                ${message.role !== 'user' ? `
+                    <button class="action-btn regenerate-btn" onclick="regenerateResponse()" title="Regenerate all responses">
+                        🔄 Regenerate
+                    </button>
+                ` : ''}
+            </div>
             <div class="message-reactions" data-message-id="${message.id}">
                 ${renderReactions(message.reactions || {})}
             </div>
@@ -1157,10 +1212,82 @@ function escapeHtml(text) {
     return div.innerHTML.replace(/\n/g, '<br>');
 }
 
+// Copy message to clipboard
+async function copyMessage(messageId) {
+    const message = currentConversation.messages.find(m => m.id === messageId);
+    if (!message) return;
+
+    try {
+        await navigator.clipboard.writeText(message.content);
+
+        // Visual feedback
+        const btn = document.querySelector(`[data-message-id="${messageId}"] .copy-btn`);
+        if (btn) {
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            btn.style.color = 'var(--secondary)';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.color = '';
+            }, 2000);
+        }
+    } catch (err) {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy message');
+    }
+}
+
+// Regenerate response - resend the last user message
+async function regenerateResponse() {
+    if (!currentConversation || currentConversation.messages.length === 0) {
+        return;
+    }
+
+    // Find the last user message
+    const lastUserMessage = [...currentConversation.messages]
+        .reverse()
+        .find(m => m.role === 'user');
+
+    if (!lastUserMessage) {
+        alert('No user message to regenerate from');
+        return;
+    }
+
+    // Remove all messages after the last user message
+    const userMessageIndex = currentConversation.messages.findIndex(m => m.id === lastUserMessage.id);
+    const messagesToKeep = currentConversation.messages.slice(0, userMessageIndex + 1);
+
+    // Update conversation
+    currentConversation.messages = messagesToKeep;
+    saveConversationToStorage(currentConversation);
+
+    // Re-render messages
+    messagesContainer.innerHTML = '';
+    messagesToKeep.forEach(msg => addMessageToUI(msg));
+
+    // Resend the last user message
+    sendBtn.disabled = true;
+    messageInput.disabled = true;
+
+    try {
+        await fetch(`/api/conversations/${currentConversation.id}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: lastUserMessage.content })
+        });
+    } finally {
+        sendBtn.disabled = false;
+        messageInput.disabled = false;
+        messageInput.focus();
+    }
+}
+
 // Make functions available globally for onclick handlers
 window.addReaction = addReaction;
 window.voteMessage = voteMessage;
 window.scrollToMessage = scrollToMessage;
+window.copyMessage = copyMessage;
+window.regenerateResponse = regenerateResponse;
 
 // Add highlight animation to CSS dynamically
 const style = document.createElement('style');

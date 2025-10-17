@@ -19,7 +19,10 @@
             <div class="sidebar-header">
                 <h1>🧠 AI Brainstorm</h1>
                 <button id="newChatBtn" class="btn-primary">+ New Chat</button>
-                <button id="settingsBtn" class="btn-icon" title="Settings & Help">⚙️</button>
+                <div class="sidebar-header-buttons">
+                    <button id="themeToggle" class="btn-icon" title="Toggle theme">🌙</button>
+                    <button id="settingsBtn" class="btn-icon" title="Settings & Help">⚙️</button>
+                </div>
             </div>
             
             <div class="sidebar-content">
@@ -107,7 +110,12 @@
                 <div class="chat-title">
                     <span id="chatTitle">Start a new conversation</span>
                 </div>
-                <div class="thinking-indicators" id="thinkingIndicators"></div>
+                <div class="header-actions">
+                    <button id="stopBtn" class="btn-stop hidden" title="Stop generation">
+                        ⏹️ Stop
+                    </button>
+                    <div class="thinking-indicators" id="thinkingIndicators"></div>
+                </div>
             </div>
             
             <div class="messages-container" id="messagesContainer">

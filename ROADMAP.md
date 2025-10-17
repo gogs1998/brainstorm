@@ -22,6 +22,105 @@
 
 ## 🚀 Roadmap - Prioritized Feature List
 
+### 🔥 **IMMEDIATE PRIORITY (Next 2 Weeks)**
+**Theme: Foundation & Usability**
+
+#### 0.1 Conversation History & Persistence ⭐ **IN PROGRESS**
+**Effort:** Medium | **Impact:** Very High | **Timeline:** 3-5 days
+
+Currently conversations are lost on page refresh. This is the #1 requested feature.
+
+**Features:**
+- **localStorage Persistence**
+  - Save all conversations automatically
+  - Survive browser refresh
+  - No account needed
+
+- **Conversation List**
+  - Sidebar shows all past conversations
+  - Auto-generated titles (from first message)
+  - Timestamp and model info
+  - Delete conversations
+
+- **Quick Access**
+  - Recent conversations at top
+  - Search through history
+  - Resume any conversation
+
+- **Export/Import**
+  - Backup to JSON file
+  - Import from file
+  - Clear all history
+
+**Implementation:**
+- localStorage API for persistence
+- Index by conversation ID
+- Lazy load old conversations
+- Compression for large conversations
+
+---
+
+#### 0.2 Streaming Responses ⭐ **IN PROGRESS**
+**Effort:** Medium | **Impact:** Very High | **Timeline:** 3-4 days
+
+Show responses word-by-word as they generate (like ChatGPT). Currently users wait for full response.
+
+**Features:**
+- **Real-time Streaming**
+  - Words appear as model generates
+  - Multiple models stream simultaneously
+  - Smooth animation
+
+- **User Control**
+  - Stop generation mid-stream
+  - Regenerate response
+  - Stream speed control (optional)
+
+- **Visual Feedback**
+  - Typing indicator while streaming
+  - Progress indication
+  - Clear when complete
+
+**Implementation:**
+- Server-Sent Events (SSE) or WebSocket streaming
+- OpenRouter streaming API
+- Token-by-token rendering
+- Graceful fallback if streaming fails
+
+---
+
+#### 0.3 Mobile Experience Improvements ⭐ **IN PROGRESS**
+**Effort:** Small-Medium | **Impact:** High | **Timeline:** 2-3 days
+
+Better responsive design and mobile-specific features.
+
+**Features:**
+- **Responsive Layout**
+  - Hamburger menu for sidebar
+  - Touch-optimized buttons (larger tap targets)
+  - Swipe gestures
+  - Better spacing on small screens
+
+- **Mobile-Specific**
+  - Pull to refresh
+  - Long-press context menus
+  - Share sheet integration
+  - Add to home screen prompt
+
+- **Performance**
+  - Optimize for slower connections
+  - Reduce data usage
+  - Lazy load images/avatars
+  - Virtual scrolling for long conversations
+
+**Implementation:**
+- Media queries for breakpoints
+- Touch event handlers
+- PWA manifest updates
+- Optimize bundle size
+
+---
+
 ### Phase 1: Core Enhancements (Q1 2026)
 **Theme: Voice, Code, and Memory**
 
@@ -733,26 +832,64 @@ After iOS launch, consider Android:
 
 These are small features that can be added between major releases:
 
-- [ ] **Dark/Light Mode Toggle** (1 day)
-- [ ] **Custom Color Themes** (2 days)
-- [ ] **Message Edit/Delete** (2 days)
-- [ ] **Conversation Folders** (3 days)
-- [ ] **Favorite Messages** (2 days)
-- [ ] **Pin Important Messages** (2 days)
-- [ ] **Model Comparison View** (3 days) - Side-by-side responses
-- [ ] **Conversation Duplication** (1 day) - Clone and modify
+### UI/UX Improvements
+- [ ] **Dark/Light Mode Toggle** (1 day) - System theme support
+- [ ] **Custom Color Themes** (2 days) - User-defined color schemes
+- [ ] **Message Edit** (2 days) - Edit your previous messages
+- [ ] **Regenerate Response** (1 day) - Re-run last message with different models
+- [ ] **Pin Important Messages** (2 days) - Keep key insights visible
+- [ ] **Copy Message Button** (1 hour) - Easy copy per message
 - [ ] **Better Onboarding** (3 days) - Interactive tutorial
 - [ ] **Keyboard Navigation** (2 days) - Navigate with arrow keys
+- [ ] **Read Mode** (2 days) - Distraction-free reading view
+- [ ] **Custom Model Avatars** (1 day) - Upload your own model icons
+
+### Conversation Management
+- [ ] **Conversation Titles** (2 days) - Auto-generated or custom
+- [ ] **Conversation Folders** (3 days) - Organize by project/topic
+- [ ] **Conversation Tags** (2 days) - Tag and filter conversations
+- [ ] **Favorite Conversations** (1 day) - Star important chats
+- [ ] **Conversation Duplication** (1 day) - Clone and modify
+- [ ] **Conversation Templates from Chats** (2 days) - Save chat as template
+- [ ] **Archive Conversations** (1 day) - Hide but don't delete
+- [ ] **Conversation Search** (2 days) - Search across all conversations
+
+### Export & Sharing
+- [ ] **Export to PDF** (2 days) - Better than markdown
+- [ ] **Share Conversation Link** (3 days) - Public read-only link
+- [ ] **Export Selected Messages** (1 day) - Not just full conversation
+- [ ] **Copy as Code** (1 hour) - Export with syntax highlighting
+- [ ] **Email Export** (1 day) - Send conversation via email
+
+### Model & Response Features
+- [ ] **Model Comparison View** (3 days) - Side-by-side responses
+- [ ] **Model Performance Dashboard** (3 days) - Which model performs best
+- [ ] **Custom Model Selection per Template** (2 days) - Save model preferences
+- [ ] **Model Response Stats** (2 days) - Speed, quality, cost per model
+- [ ] **Stop Generation** (1 day) - Cancel mid-generation
+- [ ] **Cost Tracking & Budgets** (3 days) - Set spending limits
+
+### Input & Interaction
 - [ ] **Rich Text Input** (4 days) - Bold, italic, code in input
 - [ ] **Drag & Drop Images** (3 days) - Upload images to discuss
 - [ ] **Auto-save Drafts** (2 days) - Never lose your input
-- [ ] **Conversation Templates from Chats** (2 days) - Save chat as template
-- [ ] **Basic TTS Prototype** (1 day) - Simple OpenAI TTS button per message
-- [ ] **Read Mode** (2 days) - Distraction-free reading view
-- [ ] **Export to PDF** (2 days) - Better than markdown
+- [ ] **Voice Input** (3 days) - Speech-to-text
 - [ ] **Message Bookmarking** (2 days) - Save important messages
+- [ ] **Multi-line Input Improvements** (1 day) - Better textarea handling
+
+### Analytics & Insights
 - [ ] **Conversation Analytics** (3 days) - Word clouds, topic trends
-- [ ] **Model Performance Dashboard** (3 days) - Which model performs best
+- [ ] **User Stats Dashboard** (2 days) - Your usage patterns
+- [ ] **Token Usage Graphs** (2 days) - Visualize spending over time
+- [ ] **Popular Topics** (2 days) - What you talk about most
+
+### Performance & Polish
+- [ ] **Basic TTS Prototype** (1 day) - Simple OpenAI TTS button per message
+- [ ] **Loading Skeletons** (1 day) - Better loading states
+- [ ] **Error Recovery** (2 days) - Retry failed requests
+- [ ] **Offline Mode Indicator** (1 hour) - Show when offline
+- [ ] **PWA Improvements** (2 days) - Better app-like experience
+- [ ] **Reduce Bundle Size** (2 days) - Faster initial load
 
 ---
 

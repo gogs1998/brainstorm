@@ -33,6 +33,9 @@ const searchResults = document.getElementById('searchResults');
 const messageCount = document.getElementById('messageCount');
 const tokenCount = document.getElementById('tokenCount');
 const costCount = document.getElementById('costCount');
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
 
 // localStorage Functions
 function loadConversationsFromStorage() {
@@ -176,7 +179,7 @@ function renderConversation(conversation) {
 }
 
 // Make functions available globally
-window.loadConversation = loadConversationFromStorage;
+// Note: window.loadConversation is set up in setupEventListeners to include mobile menu closing
 window.deleteConversation = deleteConversationFromStorage;
 
 // Initialize
@@ -322,8 +325,38 @@ function setupEventListeners() {
             sendMessage();
         }
     });
-    
-    newChatBtn.addEventListener('click', createNewConversation);
+
+    // Mobile menu toggle
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // Close sidebar when clicking on a conversation
+        window.loadConversation = function(conversationId) {
+            loadConversationFromStorage(conversationId);
+            // Close mobile menu after selection
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+            }
+        };
+    }
+
+    newChatBtn.addEventListener('click', () => {
+        createNewConversation();
+        // Close mobile menu after creating new conversation
+        if (window.innerWidth <= 768) {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        }
+    });
     
     modeSelect.addEventListener('change', (e) => {
         updateConversationMode(e.target.value);

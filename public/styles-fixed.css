@@ -1096,31 +1096,182 @@ body {
     51%, 100% { opacity: 0; }
 }
 
+/* Mobile Header */
+.mobile-header {
+    display: none;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 101;
+}
+
+.mobile-header h1 {
+    font-size: 18px;
+    flex: 1;
+}
+
+.menu-toggle {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.menu-toggle:hover {
+    background: var(--surface-light);
+}
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 99;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+    .mobile-header {
+        display: flex;
+    }
+
     .app-container {
         grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
     }
 
     .sidebar {
         position: fixed;
-        left: -320px;
+        left: -100%;
+        top: 0;
         height: 100vh;
         z-index: 100;
-        transition: left 0.3s;
-        width: 320px;
+        transition: left 0.3s ease;
+        width: 280px;
+        max-width: 85vw;
     }
 
     .sidebar.open {
         left: 0;
+        box-shadow: 4px 0 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar-header h1 {
+        font-size: 18px;
+    }
+
+    .chat-container {
+        grid-row: 2;
+    }
+
+    .message {
+        max-width: 95%;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
     }
 
     .settings-tabs {
         flex-wrap: wrap;
+        gap: 4px;
     }
 
     .tab-btn {
         flex: 1;
-        min-width: 100px;
+        min-width: 80px;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .mode-card, .feature-card {
+        padding: 12px;
+    }
+
+    /* Better touch targets */
+    .btn-primary,
+    .btn-secondary {
+        padding: 14px 16px;
+        font-size: 15px;
+    }
+
+    .reaction-btn {
+        padding: 6px 10px;
+        font-size: 20px;
+    }
+
+    .vote-star {
+        font-size: 18px;
+        padding: 4px;
+    }
+
+    /* Optimize message input for mobile */
+    .input-container {
+        padding: 12px;
+    }
+
+    #messageInput {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    .btn-send {
+        width: 44px;
+        height: 44px;
+    }
+
+    /* Conversation history adjustments */
+    .conversations-list {
+        max-height: 200px;
+    }
+
+    .conversation-item {
+        padding: 10px;
+    }
+
+    .conversation-title {
+        font-size: 13px;
+    }
+
+    .conversation-meta {
+        font-size: 10px;
+    }
+
+    /* Model toggles */
+    .model-toggle {
+        padding: 10px;
+    }
+
+    .avatar {
+        font-size: 18px;
+    }
+
+    .model-name {
+        font-size: 13px;
+    }
+
+    .model-desc {
+        font-size: 10px;
     }
 }

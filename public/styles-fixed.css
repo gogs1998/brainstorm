@@ -74,8 +74,92 @@ body {
 .stats-panel,
 .actions-panel,
 .templates-panel,
-.search-panel {
+.search-panel,
+.history-panel {
     margin-bottom: 24px;
+}
+
+/* Conversation History */
+.conversations-list {
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.conversation-item {
+    background: var(--surface-light);
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.conversation-item:hover {
+    background: #475569;
+}
+
+.conversation-item.active {
+    background: #475569;
+    border-left-color: var(--primary);
+}
+
+.conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.conversation-title {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.conversation-delete {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.conversation-delete:hover {
+    background: var(--background);
+    color: #ef4444;
+}
+
+.conversation-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 6px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 13px;
 }
 
 .settings-panel h3,

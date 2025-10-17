@@ -3,6 +3,11 @@ let currentConversation = null;
 let ws = null;
 let models = {};
 let templates = {};
+let conversationHistory = []; // All saved conversations
+
+// localStorage keys
+const STORAGE_KEY = 'ai_brainstorm_conversations';
+const CURRENT_CONVERSATION_KEY = 'ai_brainstorm_current_id';
 
 // DOM Elements
 const messagesContainer = document.getElementById('messagesContainer');
@@ -29,34 +34,190 @@ const messageCount = document.getElementById('messageCount');
 const tokenCount = document.getElementById('tokenCount');
 const costCount = document.getElementById('costCount');
 
+// localStorage Functions
+function loadConversationsFromStorage() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            conversationHistory = JSON.parse(stored);
+            // Sort by last updated (most recent first)
+            conversationHistory.sort((a, b) =>
+                new Date(b.lastUpdated || b.createdAt) - new Date(a.lastUpdated || a.createdAt)
+            );
+        }
+    } catch (error) {
+        console.error('Error loading conversations from storage:', error);
+        conversationHistory = [];
+    }
+}
+
+function saveConversationToStorage(conversation) {
+    try {
+        // Add timestamp
+        conversation.lastUpdated = new Date().toISOString();
+
+        // Find existing conversation or add new one
+        const existingIndex = conversationHistory.findIndex(c => c.id === conversation.id);
+        if (existingIndex >= 0) {
+            conversationHistory[existingIndex] = conversation;
+        } else {
+            conversationHistory.unshift(conversation);
+        }
+
+        // Limit to 50 most recent conversations
+        if (conversationHistory.length > 50) {
+            conversationHistory = conversationHistory.slice(0, 50);
+        }
+
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationHistory));
+        localStorage.setItem(CURRENT_CONVERSATION_KEY, conversation.id);
+
+        // Update UI
+        renderConversationsList();
+    } catch (error) {
+        console.error('Error saving conversation to storage:', error);
+    }
+}
+
+function deleteConversationFromStorage(conversationId) {
+    try {
+        conversationHistory = conversationHistory.filter(c => c.id !== conversationId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationHistory));
+        renderConversationsList();
+
+        // If we deleted the current conversation, create a new one
+        if (currentConversation?.id === conversationId) {
+            createNewConversation();
+        }
+    } catch (error) {
+        console.error('Error deleting conversation:', error);
+    }
+}
+
+function loadConversationFromStorage(conversationId) {
+    const conversation = conversationHistory.find(c => c.id === conversationId);
+    if (conversation) {
+        currentConversation = conversation;
+        localStorage.setItem(CURRENT_CONVERSATION_KEY, conversationId);
+        renderConversation(conversation);
+        renderConversationsList(); // Update active state
+    }
+}
+
+function generateConversationTitle(conversation) {
+    if (conversation.messages && conversation.messages.length > 0) {
+        const firstUserMessage = conversation.messages.find(m => m.role === 'user');
+        if (firstUserMessage) {
+            // Take first 50 chars of first user message
+            return firstUserMessage.content.substring(0, 50) + (firstUserMessage.content.length > 50 ? '...' : '');
+        }
+    }
+    return 'New Conversation';
+}
+
+function renderConversationsList() {
+    const conversationsList = document.getElementById('conversationsList');
+
+    if (conversationHistory.length === 0) {
+        conversationsList.innerHTML = '<div class="empty-state">No conversations yet</div>';
+        return;
+    }
+
+    conversationsList.innerHTML = conversationHistory.map(conv => {
+        const title = generateConversationTitle(conv);
+        const isActive = currentConversation?.id === conv.id;
+        const date = new Date(conv.lastUpdated || conv.createdAt).toLocaleDateString();
+        const messageCount = conv.messages ? conv.messages.length : 0;
+
+        return `
+            <div class="conversation-item ${isActive ? 'active' : ''}" onclick="loadConversation('${conv.id}')">
+                <div class="conversation-header">
+                    <span class="conversation-title">${escapeHtml(title)}</span>
+                    <button class="conversation-delete" onclick="event.stopPropagation(); deleteConversation('${conv.id}')" title="Delete">×</button>
+                </div>
+                <div class="conversation-meta">
+                    <span>${messageCount} messages</span>
+                    <span>•</span>
+                    <span>${date}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderConversation(conversation) {
+    // Clear current messages
+    messagesContainer.innerHTML = '';
+
+    // Update UI with conversation settings
+    temperatureSlider.value = conversation.temperature || 0.7;
+    temperatureValue.textContent = (conversation.temperature || 0.7).toFixed(1);
+    modeSelect.value = conversation.mode || 'collaborate';
+
+    // Update model toggles
+    document.querySelectorAll('.model-toggle input').forEach(checkbox => {
+        checkbox.checked = (conversation.activeModels || []).includes(checkbox.value);
+    });
+
+    // Render messages
+    if (conversation.messages && conversation.messages.length > 0) {
+        conversation.messages.forEach(message => {
+            addMessageToUI(message);
+        });
+    } else {
+        messagesContainer.innerHTML = generateWelcomeMessage();
+    }
+
+    // Update stats
+    updateStats();
+
+    messageInput.focus();
+}
+
+// Make functions available globally
+window.loadConversation = loadConversationFromStorage;
+window.deleteConversation = deleteConversationFromStorage;
+
 // Initialize
 async function init() {
+    // Load conversations from storage
+    loadConversationsFromStorage();
+
     // Load available models
     const modelsResponse = await fetch('/api/models');
     models = await modelsResponse.json();
-    
+
     // Populate model toggles
     populateModelToggles();
-    
+
     // Load available templates
     const templatesResponse = await fetch('/api/templates');
     templates = await templatesResponse.json();
-    
+
     // Populate template selector
     populateTemplateSelector();
-    
+
     // Setup WebSocket
     setupWebSocket();
-    
-    // Create initial conversation
-    await createNewConversation();
-    
+
+    // Load last conversation or create new one
+    const lastConvId = localStorage.getItem(CURRENT_CONVERSATION_KEY);
+    if (lastConvId && conversationHistory.find(c => c.id === lastConvId)) {
+        loadConversationFromStorage(lastConvId);
+    } else {
+        await createNewConversation();
+    }
+
+    // Render conversations list
+    renderConversationsList();
+
     // Setup event listeners
     setupEventListeners();
-    
+
     // Auto-resize textarea
     messageInput.addEventListener('input', autoResizeTextarea);
-    
+
     // Setup keyboard shortcuts
     setupKeyboardShortcuts();
 }
@@ -126,11 +287,13 @@ function setupWebSocket() {
 
 function handleWebSocketMessage(data) {
     if (data.conversationId !== currentConversation?.id) return;
-    
+
     switch (data.type) {
         case 'message':
             addMessageToUI(data.message);
             updateStats();
+            // Save to localStorage after each message
+            saveConversationToStorage(currentConversation);
             break;
         case 'thinking':
             addThinkingIndicator(data.model);

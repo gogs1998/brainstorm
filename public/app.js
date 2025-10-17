@@ -289,6 +289,10 @@ function handleWebSocketMessage(data) {
     if (data.conversationId !== currentConversation?.id) return;
 
     switch (data.type) {
+        case 'stream':
+            // Handle streaming chunks - update message in real-time
+            updateStreamingMessage(data);
+            break;
         case 'message':
             addMessageToUI(data.message);
             updateStats();
@@ -801,6 +805,113 @@ Now please provide your analysis of this repository.`;
     }
 }
 
+function updateStreamingMessage(data) {
+    const { messageId, modelKey, content, isComplete } = data;
+
+    // Remove welcome message if it exists
+    const welcome = messagesContainer.querySelector('.welcome-message');
+    if (welcome) welcome.remove();
+
+    // Check if message div already exists
+    let messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+
+    if (!messageDiv) {
+        // Create new message div for first chunk
+        messageDiv = document.createElement('div');
+        messageDiv.className = `message ${modelKey}`;
+        messageDiv.dataset.messageId = messageId;
+
+        const model = models[modelKey];
+        const avatar = model?.avatar || '🤖';
+        const time = new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        messageDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content">
+                <div class="message-header">
+                    <span class="message-name">${model.name}</span>
+                    <span class="message-time">${time}</span>
+                </div>
+                <div class="message-text"></div>
+                ${!isComplete ? '<div class="streaming-cursor">▊</div>' : ''}
+                <div class="message-reactions" data-message-id="${messageId}"></div>
+            </div>
+        `;
+
+        messagesContainer.appendChild(messageDiv);
+
+        // Remove the thinking indicator for this model
+        const thinkingIndicator = thinkingIndicators.querySelector(`[data-model="${modelKey}"]`);
+        if (thinkingIndicator) thinkingIndicator.remove();
+    }
+
+    // Update the message text
+    const messageText = messageDiv.querySelector('.message-text');
+    if (messageText) {
+        // Render markdown if available
+        const renderedContent = typeof marked !== 'undefined'
+            ? marked.parse(content)
+            : escapeHtml(content);
+        messageText.innerHTML = renderedContent;
+    }
+
+    // If complete, add interaction buttons and save to conversation
+    if (isComplete) {
+        // Remove streaming cursor
+        const cursor = messageDiv.querySelector('.streaming-cursor');
+        if (cursor) cursor.remove();
+
+        // Add reaction and voting UI
+        const messageContent = messageDiv.querySelector('.message-content');
+        const model = models[modelKey];
+
+        if (!messageContent.querySelector('.reaction-picker')) {
+            messageContent.innerHTML += `
+                <div class="reaction-picker">
+                    <button class="reaction-btn" onclick="addReaction('${messageId}', '👍')">👍</button>
+                    <button class="reaction-btn" onclick="addReaction('${messageId}', '❤️')">❤️</button>
+                    <button class="reaction-btn" onclick="addReaction('${messageId}', '💡')">💡</button>
+                    <button class="reaction-btn" onclick="addReaction('${messageId}', '🔥')">🔥</button>
+                    <button class="reaction-btn" onclick="addReaction('${messageId}', '👎')">👎</button>
+                </div>
+                <div class="message-vote">
+                    Rate this response:
+                    <span class="vote-stars">
+                        ${[1, 2, 3, 4, 5].map(n =>
+                            `<span class="vote-star" onclick="voteMessage('${messageId}', ${n})">⭐</span>`
+                        ).join('')}
+                    </span>
+                </div>
+            `;
+        }
+
+        // Add the complete message to conversation history
+        const assistantMessage = {
+            id: messageId,
+            role: 'assistant',
+            content: content,
+            name: model.name,
+            modelKey: modelKey,
+            timestamp: new Date(),
+            reactions: {},
+            votes: 0
+        };
+
+        // Only add if not already in conversation (to prevent duplicates)
+        if (!currentConversation.messages.find(m => m.id === messageId)) {
+            currentConversation.messages.push(assistantMessage);
+            saveConversationToStorage(currentConversation);
+            updateStats();
+        }
+    }
+
+    // Auto-scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
 function addMessageToUI(message) {
     // Check if message already exists (prevent duplicates)
     const existing = document.querySelector(`[data-message-id="${message.id}"]`);
@@ -813,20 +924,20 @@ function addMessageToUI(message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${message.role === 'user' ? 'user' : message.modelKey || 'assistant'}`;
     messageDiv.dataset.messageId = message.id;
-    
-    const time = new Date(message.timestamp).toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+
+    const time = new Date(message.timestamp).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
     });
-    
+
     const model = message.modelKey ? models[message.modelKey] : null;
     const avatar = message.role === 'user' ? '👤' : (model?.avatar || '🤖');
-    
+
     // Render markdown if available
-    const content = typeof marked !== 'undefined' 
+    const content = typeof marked !== 'undefined'
         ? marked.parse(message.content)
         : escapeHtml(message.content);
-    
+
     messageDiv.innerHTML = `
         <div class="message-avatar">${avatar}</div>
         <div class="message-content">
@@ -849,7 +960,7 @@ function addMessageToUI(message) {
                 <div class="message-vote">
                     Rate this response:
                     <span class="vote-stars">
-                        ${[1, 2, 3, 4, 5].map(n => 
+                        ${[1, 2, 3, 4, 5].map(n =>
                             `<span class="vote-star" onclick="voteMessage('${message.id}', ${n})">⭐</span>`
                         ).join('')}
                     </span>
@@ -858,7 +969,7 @@ function addMessageToUI(message) {
             ` : ''}
         </div>
     `;
-    
+
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }

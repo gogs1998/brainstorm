@@ -299,10 +299,10 @@ function broadcast(data) {
   });
 }
 
-// Call OpenRouter API
+// Call OpenRouter API (non-streaming)
 async function callModel(modelKey, messages, persona = null, temperature = 0.7) {
   const model = MODELS[modelKey];
-  
+
   let systemPrompt = `You are ${model.name} participating in a collaborative brainstorming session with other AI models and a human user.
 
 IMPORTANT: Just respond naturally - do NOT prefix your response with your name or say things like "${model.name}:" or "I'm ${model.name}...". Your name is already shown in the interface.
@@ -348,7 +348,7 @@ Messages show speaker names. When responding:
     }
 
     const data = await response.json();
-    
+
     return {
       content: data.choices[0].message.content,
       usage: data.usage,
@@ -356,6 +356,105 @@ Messages show speaker names. When responding:
     };
   } catch (error) {
     console.error(`Error calling ${modelKey}:`, error);
+    return null;
+  }
+}
+
+// Call OpenRouter API with streaming
+async function callModelStreaming(modelKey, messages, persona, temperature, conversationId) {
+  const model = MODELS[modelKey];
+
+  let systemPrompt = `You are ${model.name} participating in a collaborative brainstorming session with other AI models and a human user.
+
+IMPORTANT: Just respond naturally - do NOT prefix your response with your name or say things like "${model.name}:" or "I'm ${model.name}...". Your name is already shown in the interface.
+
+Messages show speaker names. When responding:
+- Build on others' ideas naturally
+- Offer alternative perspectives constructively
+- Reference specific points by name (e.g., "I like Claude's point about..." or "Building on what Qwen said...")
+- Ask clarifying questions to any participant
+- Be conversational and concise (2-4 paragraphs typically)
+- Be collaborative, not competitive
+- Respond as yourself, but don't announce your name in the response`;
+
+  if (persona) {
+    systemPrompt += `\n\n${persona}`;
+  }
+
+  const messagesWithSystem = [
+    { role: 'system', content: systemPrompt },
+    ...messages
+  ];
+
+  try {
+    const response = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'http://localhost:3000',
+        'X-Title': 'AI Brainstorm App'
+      },
+      body: JSON.stringify({
+        model: model.id,
+        messages: messagesWithSystem,
+        max_tokens: 600,
+        temperature: temperature,
+        stream: true
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`API Error: ${response.status} - ${error}`);
+    }
+
+    let fullContent = '';
+    const messageId = uuidv4();
+
+    // Stream the response
+    const reader = response.body;
+    reader.setEncoding('utf8');
+
+    for await (const chunk of reader) {
+      const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          if (data === '[DONE]') continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices[0]?.delta?.content || '';
+
+            if (content) {
+              fullContent += content;
+
+              // Broadcast streaming chunk
+              broadcast({
+                type: 'stream',
+                conversationId,
+                modelKey,
+                messageId,
+                content: fullContent,
+                isComplete: false
+              });
+            }
+          } catch (e) {
+            // Skip invalid JSON
+          }
+        }
+      }
+    }
+
+    return {
+      content: fullContent,
+      messageId,
+      model: model.id
+    };
+  } catch (error) {
+    console.error(`Error streaming ${modelKey}:`, error);
     return null;
   }
 }
@@ -666,7 +765,7 @@ app.post('/api/conversations/:id/messages', async (req, res) => {
       }
     }
   } else {
-    // Parallel mode: all models respond at once (default)
+    // Parallel mode: all models respond at once (default) - with streaming!
     const modelResponses = await Promise.all(
       respondingModels.map(async (modelKey) => {
         broadcast({
@@ -678,12 +777,12 @@ app.post('/api/conversations/:id/messages', async (req, res) => {
         const persona = conversation.personas[modelKey];
         const temperature = conversation.temperature || (conversation.mode === 'debate' ? 0.8 : 0.7);
 
-        const result = await callModel(modelKey, apiMessages, persona, temperature);
+        const result = await callModelStreaming(modelKey, apiMessages, persona, temperature, conversation.id);
 
         if (result) {
           const model = MODELS[modelKey];
           const assistantMessage = {
-            id: uuidv4(),
+            id: result.messageId,
             role: 'assistant',
             content: result.content,
             name: model.name,
@@ -696,18 +795,19 @@ app.post('/api/conversations/:id/messages', async (req, res) => {
 
           conversation.messages.push(assistantMessage);
 
-          // Update token usage
-          if (result.usage) {
-            conversation.totalTokens += (result.usage.total_tokens || 0);
-            // Rough cost estimate (varies by model)
-            conversation.totalCost += (result.usage.total_tokens || 0) * 0.000015;
-          }
+          // Update token usage (estimating since streaming doesn't always return usage)
+          const estimatedTokens = Math.ceil(result.content.length / 4);
+          conversation.totalTokens += estimatedTokens;
+          conversation.totalCost += estimatedTokens * 0.000015;
 
-          // Broadcast model response
+          // Broadcast final complete message
           broadcast({
-            type: 'message',
+            type: 'stream',
             conversationId: conversation.id,
-            message: assistantMessage
+            modelKey,
+            messageId: result.messageId,
+            content: result.content,
+            isComplete: true
           });
 
           return assistantMessage;

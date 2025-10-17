@@ -13,6 +13,7 @@
             <div class="sidebar-header">
                 <h1>🧠 AI Brainstorm</h1>
                 <button id="newChatBtn" class="btn-primary">+ New Chat</button>
+                <button id="settingsBtn" class="btn-icon" title="Settings & Help">⚙️</button>
             </div>
             
             <div class="sidebar-content">
@@ -183,7 +184,120 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>⚙️ Settings & Help</h2>
+                <button class="modal-close-settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="modes">Conversation Modes</button>
+                    <button class="tab-btn" data-tab="models">Models</button>
+                    <button class="tab-btn" data-tab="features">Features</button>
+                </div>
+
+                <!-- Modes Tab -->
+                <div class="tab-content active" data-tab="modes">
+                    <h3>🎯 Standard Modes</h3>
+                    <div class="mode-card">
+                        <h4>🤝 Collaborate</h4>
+                        <p>Models work together harmoniously, building on each other's ideas and exploring topics from complementary angles.</p>
+                        <p><strong>Best for:</strong> Brainstorming, research, creative projects</p>
+                    </div>
+                    <div class="mode-card">
+                        <h4>⚔️ Debate</h4>
+                        <p>Models take opposing viewpoints and challenge each other's arguments constructively.</p>
+                        <p><strong>Best for:</strong> Evaluating decisions, exploring controversies, critical thinking</p>
+                    </div>
+                    <div class="mode-card">
+                        <h4>🎭 Personas</h4>
+                        <p>Assign specific roles to each model (e.g., "optimist", "skeptic", "technical expert").</p>
+                        <p><strong>Best for:</strong> Structured analysis, role-playing scenarios</p>
+                    </div>
+
+                    <h3>🧪 Experimental Modes</h3>
+                    <div class="mode-card experimental">
+                        <h4>🧪 Sequential</h4>
+                        <p>Models respond one after another, each building on the previous response. Creates a flowing conversation where each model can see what others said.</p>
+                        <p><strong>Best for:</strong> Building complex narratives, step-by-step problem solving</p>
+                    </div>
+                    <div class="mode-card experimental">
+                        <h4>🎲 Turn-Based</h4>
+                        <p>Only one model responds per message, rotating through available models. Like taking turns in a conversation.</p>
+                        <p><strong>Best for:</strong> Focused one-on-one style discussions, reducing information overload</p>
+                    </div>
+                    <div class="mode-card experimental">
+                        <h4>🎤 Facilitator</h4>
+                        <p>One model (Claude) leads the discussion and calls on other models by name to contribute.</p>
+                        <p><strong>Best for:</strong> Structured meetings, guided exploration, interviews</p>
+                    </div>
+                    <div class="mode-card experimental">
+                        <h4>⚔️ Debate Rounds</h4>
+                        <p>Structured debate format with opening statements, rebuttals, and closing arguments.</p>
+                        <p><strong>Best for:</strong> Formal debates, competitive analysis, examining two sides</p>
+                    </div>
+                    <div class="mode-card experimental">
+                        <h4>🤔 Socratic Method</h4>
+                        <p>One model asks probing questions while another explores answers through dialogue.</p>
+                        <p><strong>Best for:</strong> Deep philosophical exploration, teaching, self-discovery</p>
+                    </div>
+                </div>
+
+                <!-- Models Tab -->
+                <div class="tab-content" data-tab="models">
+                    <h3>Available Models</h3>
+                    <div id="modelsList" class="models-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                    <div class="info-box">
+                        <p><strong>💡 Tip:</strong> Use @mentions to target specific models in any conversation!</p>
+                        <p>Example: <code>@claude what do you think?</code> or <code>@qwen @phi compare your views</code></p>
+                    </div>
+                </div>
+
+                <!-- Features Tab -->
+                <div class="tab-content" data-tab="features">
+                    <h3>Key Features</h3>
+                    <div class="feature-card">
+                        <h4>💬 @Mentions</h4>
+                        <p>Target specific models by typing <code>@modelname</code> in your message. Only mentioned models will respond.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📝 Templates</h4>
+                        <p>Pre-configured conversation setups for common scenarios (brainstorming, debates, research, etc.)</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🎭 Historical Figures</h4>
+                        <p>Chat with AI versions of Einstein, Curie, da Vinci, and other historical personalities.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📂 GitHub Analysis</h4>
+                        <p>Paste a GitHub URL to have models analyze the repository collaboratively.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>👍 Reactions & Voting</h4>
+                        <p>React to messages and vote for the best responses to track what resonates.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔍 Search</h4>
+                        <p>Search through conversation history to find specific messages or topics.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>💾 Export</h4>
+                        <p>Export entire conversations to Markdown format for documentation.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>⌨️ Keyboard Shortcuts</h4>
+                        <p>Press <kbd>Cmd/Ctrl</kbd> + <kbd>/</kbd> to see all available shortcuts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="app.js"></script>
 </body>

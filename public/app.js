@@ -4,11 +4,12 @@ let ws = null;
 let models = {};
 let templates = {};
 
-// DOM Elements  
+// DOM Elements
 const messagesContainer = document.getElementById('messagesContainer');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const newChatBtn = document.getElementById('newChatBtn');
+const settingsBtn = document.getElementById('settingsBtn');
 const modeSelect = document.getElementById('modeSelect');
 const templateSelect = document.getElementById('templateSelect');
 const temperatureSlider = document.getElementById('temperatureSlider');
@@ -21,6 +22,7 @@ const exportBtn = document.getElementById('exportBtn');
 const thinkingIndicators = document.getElementById('thinkingIndicators');
 const synthesisModal = document.getElementById('synthesisModal');
 const shortcutsModal = document.getElementById('shortcutsModal');
+const settingsModal = document.getElementById('settingsModal');
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 const messageCount = document.getElementById('messageCount');
@@ -186,25 +188,84 @@ function setupEventListeners() {
     document.querySelector('.modal-close-shortcuts').addEventListener('click', () => {
         shortcutsModal.classList.add('hidden');
     });
-    
+
+    // Settings modal
+    settingsBtn.addEventListener('click', () => {
+        settingsModal.classList.remove('hidden');
+        populateModelsTab();
+    });
+
+    document.querySelector('.modal-close-settings').addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+    });
+
     synthesisModal.addEventListener('click', (e) => {
         if (e.target === synthesisModal) {
             synthesisModal.classList.add('hidden');
         }
     });
-    
+
     shortcutsModal.addEventListener('click', (e) => {
         if (e.target === shortcutsModal) {
             shortcutsModal.classList.add('hidden');
         }
     });
-    
+
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.classList.add('hidden');
+        }
+    });
+
+    // Settings tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+
+            // Update active tab button
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update active tab content
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab-content[data-tab="${tab}"]`).classList.add('active');
+        });
+    });
+
     // Search functionality
     let searchTimeout;
     searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => performSearch(e.target.value), 300);
     });
+}
+
+function populateModelsTab() {
+    const modelsList = document.getElementById('modelsList');
+    const modelEntries = Object.entries(models);
+
+    // Sort: free models first, then by cost
+    const sortedModels = modelEntries.sort((a, b) => {
+        if (a[1].free && !b[1].free) return -1;
+        if (!a[1].free && b[1].free) return 1;
+        return 0;
+    });
+
+    modelsList.innerHTML = sortedModels.map(([key, model]) => {
+        const costBadge = model.free ? '<span class="cost-badge free">FREE</span>' :
+                         `<span class="cost-badge">${model.cost}</span>`;
+
+        return `
+            <div class="model-card">
+                <span class="avatar">${model.avatar}</span>
+                <div class="model-info">
+                    <div class="model-name">${model.name}</div>
+                    <div class="model-desc">${model.description}</div>
+                </div>
+                ${costBadge}
+            </div>
+        `;
+    }).join('');
 }
 
 function setupKeyboardShortcuts() {
@@ -243,6 +304,7 @@ function setupKeyboardShortcuts() {
         if (e.key === 'Escape') {
             synthesisModal.classList.add('hidden');
             shortcutsModal.classList.add('hidden');
+            settingsModal.classList.add('hidden');
             searchInput.value = '';
             searchResults.classList.add('hidden');
         }

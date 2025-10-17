@@ -809,6 +809,195 @@ body {
     background: #475569;
 }
 
+/* Settings Button */
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    color: var(--text);
+    margin-top: 8px;
+}
+
+.btn-icon:hover {
+    background: var(--surface-light);
+}
+
+/* Settings Modal */
+.modal-large {
+    max-width: 900px;
+}
+
+.modal-close-settings {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.modal-close-settings:hover {
+    background: var(--surface-light);
+}
+
+.settings-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+}
+
+.tab-btn {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--text);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-content h3 {
+    font-size: 18px;
+    margin: 24px 0 16px 0;
+    color: var(--text);
+}
+
+.tab-content h3:first-child {
+    margin-top: 0;
+}
+
+.mode-card, .feature-card {
+    background: var(--surface-light);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--primary);
+}
+
+.mode-card.experimental {
+    border-left-color: var(--secondary);
+}
+
+.mode-card h4, .feature-card h4 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.mode-card p, .feature-card p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.mode-card p:last-child, .feature-card p:last-child {
+    margin-bottom: 0;
+}
+
+.mode-card code, .feature-card code {
+    background: var(--background);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--primary);
+}
+
+.models-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.model-card {
+    background: var(--surface-light);
+    padding: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.model-card .avatar {
+    font-size: 28px;
+}
+
+.model-card .model-info {
+    flex: 1;
+}
+
+.model-card .model-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.model-card .model-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.info-box {
+    background: var(--background);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 3px solid var(--secondary);
+}
+
+.info-box p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.info-box p:last-child {
+    margin-bottom: 0;
+}
+
+.info-box code {
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--primary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .app-container {
@@ -826,5 +1015,14 @@ body {
 
     .sidebar.open {
         left: 0;
+    }
+
+    .settings-tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        flex: 1;
+        min-width: 100px;
     }
 }

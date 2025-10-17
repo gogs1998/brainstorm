@@ -1350,3 +1350,219 @@ body {
         font-size: 10px;
     }
 }
+
+/* Technical Tab Styles */
+.intro-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.technical-section {
+    margin-bottom: 32px;
+}
+
+.technical-section h4 {
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+}
+
+.execution-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.execution-card {
+    background: var(--surface-light);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.execution-card h5 {
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.execution-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.execution-card p:last-child {
+    margin-bottom: 0;
+}
+
+.prompt-examples {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.prompt-card {
+    background: var(--surface-light);
+    padding: 14px;
+    border-radius: 8px;
+    border-left: 3px solid var(--secondary);
+}
+
+.prompt-card h5 {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.prompt-card code {
+    display: block;
+    background: var(--background);
+    padding: 10px;
+    border-radius: 6px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 8px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.prompt-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.timing-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface-light);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.timing-table th {
+    background: var(--background);
+    padding: 12px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    border-bottom: 2px solid var(--border);
+}
+
+.timing-table td {
+    padding: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.timing-table tr:last-child td {
+    border-bottom: none;
+}
+
+.limits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 12px;
+}
+
+.limit-card {
+    background: var(--surface-light);
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.limit-card h5 {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.limit-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.info-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.mention-examples {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+}
+
+.mention-examples li {
+    background: var(--surface-light);
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.mention-examples li code {
+    background: var(--background);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--primary);
+}
+
+.streaming-info {
+    background: var(--surface-light);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.streaming-info p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.streaming-info p:last-child {
+    margin-bottom: 0;
+}
+
+/* Responsive adjustments for technical tab */
+@media (max-width: 768px) {
+    .execution-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .limits-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .timing-table {
+        font-size: 12px;
+    }
+
+    .timing-table th,
+    .timing-table td {
+        padding: 8px;
+    }
+}

@@ -220,6 +220,7 @@
             <div class="modal-body">
                 <div class="settings-tabs">
                     <button class="tab-btn active" data-tab="modes">Conversation Modes</button>
+                    <button class="tab-btn" data-tab="technical">How Modes Work</button>
                     <button class="tab-btn" data-tab="models">Models</button>
                     <button class="tab-btn" data-tab="features">Features</button>
                 </div>
@@ -268,6 +269,144 @@
                         <h4>🤔 Socratic Method</h4>
                         <p>One model asks probing questions while another explores answers through dialogue.</p>
                         <p><strong>Best for:</strong> Deep philosophical exploration, teaching, self-discovery</p>
+                    </div>
+                </div>
+
+                <!-- Technical Tab -->
+                <div class="tab-content" data-tab="technical">
+                    <h3>⚙️ How Conversation Modes Work</h3>
+                    <p class="intro-text">Understanding the technical differences between modes helps you choose the right one for your needs.</p>
+
+                    <div class="technical-section">
+                        <h4>🔄 Execution Strategy</h4>
+                        <div class="execution-grid">
+                            <div class="execution-card">
+                                <h5>Parallel Execution</h5>
+                                <p><strong>Modes:</strong> Collaborate, Debate, Personas</p>
+                                <p><strong>How it works:</strong> All active models receive your message simultaneously and respond at the same time. Responses appear as they stream in.</p>
+                                <p><strong>Speed:</strong> ⚡ Fastest - all models work concurrently</p>
+                                <p><strong>Context:</strong> Models see your message only, not each other's responses (in that turn)</p>
+                            </div>
+                            <div class="execution-card">
+                                <h5>Sequential Execution</h5>
+                                <p><strong>Modes:</strong> Sequential, Facilitator, Socratic, Debate Rounds</p>
+                                <p><strong>How it works:</strong> Models respond one after another with a 1.5-second delay between each. Each model sees previous responses in that turn.</p>
+                                <p><strong>Speed:</strong> 🐢 Slower - models wait for each other</p>
+                                <p><strong>Context:</strong> Each model sees all previous responses in the conversation thread</p>
+                            </div>
+                            <div class="execution-card">
+                                <h5>Turn-Based Rotation</h5>
+                                <p><strong>Modes:</strong> Turn-Based</p>
+                                <p><strong>How it works:</strong> Only ONE model responds per message, rotating through your active models in sequence.</p>
+                                <p><strong>Speed:</strong> ⚡ Fast - single response per turn</p>
+                                <p><strong>Context:</strong> The responding model sees the full conversation history</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="technical-section">
+                        <h4>💭 System Prompts & Instructions</h4>
+                        <div class="prompt-examples">
+                            <div class="prompt-card">
+                                <h5>🤝 Collaborate Mode</h5>
+                                <code>You are participating in a collaborative brainstorming session with other AI models. Work together harmoniously, build on each other's ideas, and explore topics from complementary angles.</code>
+                                <p><strong>Temperature:</strong> Uses your selected creativity setting</p>
+                            </div>
+                            <div class="prompt-card">
+                                <h5>⚔️ Debate Mode</h5>
+                                <code>You are participating in a constructive debate with other AI models. Take opposing viewpoints, challenge arguments respectfully, and help explore different perspectives on the topic.</code>
+                                <p><strong>Temperature:</strong> Uses your selected creativity setting</p>
+                            </div>
+                            <div class="prompt-card">
+                                <h5>🎭 Personas Mode</h5>
+                                <code>Base instruction + your custom role assignment (e.g., "Act as a skeptical engineer who questions assumptions" or "Take the perspective of an optimistic entrepreneur")</code>
+                                <p><strong>Temperature:</strong> Uses your selected creativity setting</p>
+                            </div>
+                            <div class="prompt-card">
+                                <h5>🧪 Sequential Mode</h5>
+                                <code>You are in a sequential discussion. Build thoughtfully on what previous models have said. You can agree, disagree, or add new angles.</code>
+                                <p><strong>Temperature:</strong> 0.8 (higher creativity for narrative flow)</p>
+                            </div>
+                            <div class="prompt-card">
+                                <h5>🎤 Facilitator Mode</h5>
+                                <code>For Claude: "You are the facilitator. Guide the discussion and call on other models by name."<br>For others: Standard collaborative instructions</code>
+                                <p><strong>Temperature:</strong> 0.7 (balanced)</p>
+                            </div>
+                            <div class="prompt-card">
+                                <h5>🤔 Socratic Mode</h5>
+                                <code>For questioner: "Ask probing, thoughtful questions to help explore the topic deeply."<br>For responder: "Answer thoughtfully and explore your reasoning."</code>
+                                <p><strong>Temperature:</strong> 0.8 (encourages exploration)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="technical-section">
+                        <h4>⏱️ Timing & Delays</h4>
+                        <table class="timing-table">
+                            <tr>
+                                <th>Mode</th>
+                                <th>Delay Between Responses</th>
+                                <th>Reason</th>
+                            </tr>
+                            <tr>
+                                <td>Parallel modes</td>
+                                <td>None (0ms)</td>
+                                <td>All models work simultaneously</td>
+                            </tr>
+                            <tr>
+                                <td>Sequential modes</td>
+                                <td>1500ms (1.5s)</td>
+                                <td>Gives time to read previous response</td>
+                            </tr>
+                            <tr>
+                                <td>Turn-Based</td>
+                                <td>None (0ms)</td>
+                                <td>Only one model responds</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="technical-section">
+                        <h4>📊 Response Limits</h4>
+                        <div class="limits-grid">
+                            <div class="limit-card">
+                                <h5>Max Tokens per Response</h5>
+                                <p><strong>All modes:</strong> 600 tokens</p>
+                                <p>This keeps responses concise and conversation-friendly (roughly 1-2 paragraphs)</p>
+                            </div>
+                            <div class="limit-card">
+                                <h5>Models per Turn</h5>
+                                <p><strong>Parallel:</strong> All active models<br>
+                                <strong>Sequential:</strong> All active models<br>
+                                <strong>Turn-Based:</strong> 1 model only</p>
+                            </div>
+                            <div class="limit-card">
+                                <h5>Conversation History</h5>
+                                <p><strong>Storage:</strong> Up to 50 conversations in localStorage<br>
+                                <strong>Context:</strong> Full message history sent to models</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="technical-section">
+                        <h4>🎯 @Mentions Override</h4>
+                        <p class="info-text">In ANY mode, you can override which models respond by using @mentions:</p>
+                        <ul class="mention-examples">
+                            <li><code>@claude what's your take on this?</code> - Only Claude responds</li>
+                            <li><code>@gemini @qwen compare your views</code> - Only Gemini and Qwen respond</li>
+                            <li><code>What do you all think?</code> - All active models respond (default behavior)</li>
+                        </ul>
+                        <p class="info-text">This works regardless of the selected mode, giving you fine-grained control over the conversation.</p>
+                    </div>
+
+                    <div class="technical-section">
+                        <h4>🔧 Streaming & WebSockets</h4>
+                        <div class="streaming-info">
+                            <p><strong>Real-time streaming:</strong> Responses appear token-by-token as they're generated, not all at once.</p>
+                            <p><strong>Technology:</strong> Server-Sent Events (SSE) from OpenRouter API + WebSocket broadcasting to your browser</p>
+                            <p><strong>Visual feedback:</strong> Blinking cursor (▊) shows active streaming, thinking indicators show which models are working</p>
+                            <p><strong>Stop button:</strong> Click the red "Stop" button anytime to halt all ongoing generations</p>
+                        </div>
                     </div>
                 </div>
 
